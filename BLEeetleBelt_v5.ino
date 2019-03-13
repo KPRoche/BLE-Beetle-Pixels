@@ -1,4 +1,53 @@
-#include <LowPower.h>
+/*--------------------------------------------------------------------------------------------------------#
+#                                                                              
+#         BLE Beetle Belt v5                                                   
+#           A wearable NeoPixel project by Kevin Roche                         
+#                                                                              
+#         Animates a  strip of RBG WS5812B addressable LEDs (NeoPixels) via the
+#         DFRobot BLE Beetle Arduino variant.
+#           uses the Adafruit_NeoPixel library, as well as the EEPROM library
+#
+#
+#               
+#         NeoPixel data connection should be connected to pin D5 on the BLE Beetle
+#               
+#         A BLE Terminal app can be used to send mode and color change requests to the program      
+#         I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
+#           Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly      
+#               
+#             COMMANDS:  
+#
+#               MODE:RBFADE     sets the strip to a continuous end-to-end rainbow fade
+#               MODE:CYLON      a multi-spot "Larsen Scanner" that goes back and forth
+#               MODE:METEOR     a multi-spot "raindrop" effect that goes in one direction
+#               MODE:THEATER    a classic theater marquee chase effect
+#               MODE:PULSE      a fade-up/fade-down effect across the whole strip
+#               MODE:SPLIT      a mirrored meteor effect that either emits from or meets in the center of the strip
+#                     (successive commands reverse the direction)
+#               MODE:DB         double meteor effect flying in both directions simultaneously
+#               MODE:HC         a cylon effect that alternates between blue and white along the whole strip
+#               MODE:HM         a meteor effect that alternates between blue and white along the whole strip
+#               MODE:FL         a meteor effect that has alternate blue and white meteors at the same time
+#               
+#           Color commands do not change the animation, but change the color used by them
+#               RGB:r,g,b       set the strip global color to an RGB value#               
+#             it is easier to use some presets 
+#               COLOR:WHITE     set the whole strip white 
+#               COLOR:IN        set the whole strip to indigo   (always looks purple to me, while violet looks pink)            
+#               COLOR:BL        set the whole strip to blue
+#               COLOR:GR        set the whole strip to green
+#               COLOR:YL        set the whole strip to yellow
+#               COLOR:OG        set the whole strip to orange
+#               COLOR:RD        set the whole strip to red
+#           Rainbow commands trigger a color progression while the pattern runs
+#               COLOR:OG        set the whole strip to orange
+#               COLOR:OG        set the whole strip to orange
+#
+#               SLEEP        set the whole strip off, but leave the program running
+#
+#
+#--------------------------------------------------------------------------------------------------------#*/
+
 #include <Adafruit_NeoPixel.h>
 #include "WS2812_Definitions.h"
 #include <EEPROM.h>
