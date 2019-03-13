@@ -43,11 +43,17 @@
   #           Rainbow commands trigger a color progression while the pattern runs
   #               RAINBOW:1        activate the rainbow modes
   #               RAINBOW:0        deactivate the rainbow modes. (Has no effect on rainbow fade or chase if active)
-  #
+  # 
+  #           Sleep command: used to use the low power library, but that requires a reset or interrupt to wake back up
   #               SLEEP        set the whole strip off, but leave the program running
   #
+  #               
+  #           Configuration commands let you experiment with some of the control parameters without recompiling.
   #               E#nnnn        change the number of "eyes" for meteors and cylons from the default of 6
   #               S#nnnn        change the number of eyes in the split meteor pattern from the default of 4
+  #                               Split eyes must be in multiples of 2
+  #               C#nn          change the comm delay from the default of 5ms to nn ms
+  #               D#nn          change the pattern timing delay from the default of 20 ms to nn ms
   #
   #
   #--------------------------------------------------------------------------------------------------------#*/
@@ -59,7 +65,7 @@
 //constants
 
 
-const int SCAN_WAIT = 20;
+
 const int  ALL_SCANS_COUNT = 4;
 const int PIN = 5;
 
@@ -72,6 +78,7 @@ int LED_COUNT = 120;
 int NO_OF_EYES = 6;
 int NO_OF_SPLIT = 4;
 int masterEyes = 2 * (LED_COUNT / 52);
+int SCAN_WAIT = 20;
 int commDelay = 5;
 boolean rainbowMode = false;
 boolean sleepMode = false;
@@ -164,6 +171,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       }
     }
   }
+  // This section is for special control parameters (modifying defaults)
   else if (queue.indexOf("E#") >= 0) {
     scratch = queue.substring(queue.indexOf("#") + 1);
     new_count = scratch.toInt();
@@ -178,6 +186,21 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       NO_OF_SPLIT = new_count;
     }
   }
+  else if (queue.indexOf("C#") >= 0) {
+    scratch = queue.substring(queue.indexOf("#") + 1);
+    new_count = scratch.toInt();
+    if (new_count > 0) {
+      commDelay = new_count;
+    }
+  }
+  else if (queue.indexOf("D#") >= 0) {
+    scratch = queue.substring(queue.indexOf("#") + 1);
+    new_count = scratch.toInt();
+    if (new_count > 0) {
+      SCAN_WAIT = new_count;
+    }
+  }
+  // This section is mode commands, controlling the patterns
   else if (queue.indexOf("MODE") >= 0) {
     if (mydebug) {
       Serial.println("Mode command detected");
@@ -240,9 +263,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       rainbowMode = false;
     }
   }
-
-
-
+  
+// This section is the color commands, to pick one of the preset colors
   else if (queue.indexOf("COLOR") >= 0) {
     scratch = queue.substring(queue.indexOf(":") + 1);
     scratch.toUpperCase();
@@ -277,6 +299,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Color command: " + scratch + ":" );
     Serial.println(g_color, HEX);
   }
+
+// This command implements the color-wheel options 
   else if (queue.indexOf("RAINBOW") >= 0) {
     if (queue.indexOf("1") > 0) {
       rainbowMode = true;
@@ -287,6 +311,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Rainbow command: ");
     Serial.println(rainbowMode);
   }
+
+  // This command puts the strip into OFF mode but leaves the program running
   else if (queue.indexOf("SLEEP") >= 0) {
     if (mydebug) {
       Serial.println("Sleep mode request detected");
@@ -305,6 +331,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Sleep command: ");
     Serial.println(sleepMode);
   }
+  
+  // This command enables the extra debug messages
   else if (queue.indexOf("DEBUG") >= 0) {
     if (mydebug) {
       Serial.println("Debug mode request detected");
@@ -316,9 +344,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     else {
       g_debug = false;
     }
-    Serial.print("Sleep command: ");
-    Serial.println(sleepMode);
   }
+  
   EEPROM.write(0, ScannerTask);
 }
 
