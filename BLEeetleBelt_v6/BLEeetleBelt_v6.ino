@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------------------------------------#
 #                                                                              
-#         BLE Beetle Belt v5                                                   
+#         BLE Beetle Belt v6                                                   
 #           A wearable NeoPixel project by Kevin Roche                         
 #                                                                              
 #         Animates a  strip of RBG WS5812B addressable LEDs (NeoPixels) via the
@@ -46,6 +46,9 @@
 #
 #               SLEEP        set the whole strip off, but leave the program running
 #
+#               E#nnnn        change the number of "eyes" for meteors and cylons from the default of 6
+#               S#nnnn        change the number of eyes in the split meteor pattern from the default of 4
+#
 #
 #--------------------------------------------------------------------------------------------------------#*/
 
@@ -67,6 +70,7 @@ byte ScannerTask = 0;
 byte MaxTask = 19;
 int LED_COUNT = 120;
 int NO_OF_EYES = 6;
+int NO_OF_SPLIT = 4;
 int masterEyes = 2 * (LED_COUNT / 52);
 int commDelay = 5;
 boolean rainbowMode = false;
@@ -127,6 +131,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
   //# global g_color;
   String scratch;
   unsigned int r, g, b;
+  int new_count = 0;
 
   if (queue.length() == 0) {
     queue = bleRead();
@@ -158,6 +163,14 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
         Serial.println(g_color, HEX);
       }
     }
+  }  
+  else if (queue.indexOf("E#") >= 0){
+    newcount = toInt(queue.substring(queue.indexOf("#")+1);
+    if (newcount > 0) { NUM_OF_SPLIT = newcount; }
+  }
+  else if (queue.indexOf("S#") >= 0){
+    newcount = toInt(queue.substring(queue.indexOf("#")+1);
+    if (newcount > 0) { NUM_OF_SPLIT = newcount; }
   }
   else if (queue.indexOf("MODE") >= 0) {
     if (mydebug) {
@@ -387,7 +400,7 @@ void loop() {
       colorFade(25, g_color, 2);
       break;
     case 6:
-      split_meteor(g_color, SCAN_WAIT / 2, 4, g_direction); // Indigo meteor eye!
+      split_meteor(g_color, SCAN_WAIT / 2, NO_OF_SPLIT, g_direction); // Indigo meteor eye!
       break;
     case 7:
       double_meteor(g_color, SCAN_WAIT / 2, 4);
