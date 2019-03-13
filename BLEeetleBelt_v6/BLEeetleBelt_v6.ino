@@ -43,15 +43,15 @@
   #           Rainbow commands trigger a color progression while the pattern runs
   #               RAINBOW:1        activate the rainbow modes
   #               RAINBOW:0        deactivate the rainbow modes. (Has no effect on rainbow fade or chase if active)
-  # 
+  #
   #           Sleep command: used to use the low power library, but that requires a reset or interrupt to wake back up
   #               SLEEP        set the whole strip off, but leave the program running
   #
-  #               
+  #
   #           Configuration commands let you experiment with some of the control parameters without recompiling.
   #               E#nnnn        change the number of "eyes" for meteors and cylons from the default of 6
   #               S#nnnn        change the number of eyes in the split meteor pattern from the default of 4
-  #                               Split eyes must be in multiples of 2
+  #                               Split eyes must be in multiples of 2. If an odd number is supplied it will be incremented by 1
   #               C#nn          change the comm delay from the default of 5ms to nn ms
   #               D#nn          change the pattern timing delay from the default of 20 ms to nn ms
   #
@@ -76,7 +76,7 @@ byte ScannerTask = 0;
 byte MaxTask = 19;
 int LED_COUNT = 120;
 int NO_OF_EYES = 6;
-int NO_OF_SPLIT = 4;
+int NO_OF_SPLIT = 6;
 int masterEyes = 2 * (LED_COUNT / 52);
 int SCAN_WAIT = 20;
 int commDelay = 5;
@@ -146,7 +146,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
   if (mydebug and queue.length() > 0) {
     Serial.println("Raw Queue: " + queue);
   }
-
+  queue.toUpperCase(); // this makes the string scans work even if you use mixed case in your terminal
   if (queue.indexOf("RGB") >= 0) {
     scratch = queue.substring(queue.indexOf(":") + 1);
     if (scratch == "0,0,0") {
@@ -183,6 +183,9 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     scratch = queue.substring(queue.indexOf("#") + 1);
     new_count = scratch.toInt();
     if (new_count > 0) {
+      if (new_count % 2 == 1) {
+        new_count++;  // increment to an even number if necessary
+      }
       NO_OF_SPLIT = new_count;
     }
   }
@@ -263,8 +266,8 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       rainbowMode = false;
     }
   }
-  
-// This section is the color commands, to pick one of the preset colors
+
+  // This section is the color commands, to pick one of the preset colors
   else if (queue.indexOf("COLOR") >= 0) {
     scratch = queue.substring(queue.indexOf(":") + 1);
     scratch.toUpperCase();
@@ -300,7 +303,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.println(g_color, HEX);
   }
 
-// This command implements the color-wheel options 
+  // This command implements the color-wheel options
   else if (queue.indexOf("RAINBOW") >= 0) {
     if (queue.indexOf("1") > 0) {
       rainbowMode = true;
@@ -331,7 +334,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Sleep command: ");
     Serial.println(sleepMode);
   }
-  
+
   // This command enables the extra debug messages
   else if (queue.indexOf("DEBUG") >= 0) {
     if (mydebug) {
@@ -345,7 +348,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       g_debug = false;
     }
   }
-  
+
   EEPROM.write(0, ScannerTask);
 }
 
