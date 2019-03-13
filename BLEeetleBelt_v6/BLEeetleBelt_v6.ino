@@ -1,56 +1,56 @@
 /*--------------------------------------------------------------------------------------------------------#
-#                                                                              
-#         BLE Beetle Belt v6                                                   
-#           A wearable NeoPixel project by Kevin Roche                         
-#                                                                              
-#         Animates a  strip of RBG WS5812B addressable LEDs (NeoPixels) via the
-#         DFRobot BLE Beetle Arduino variant.
-#           uses the Adafruit_NeoPixel library, as well as the EEPROM library
-#
-#
-#               
-#         NeoPixel data connection should be connected to pin D5 on the BLE Beetle
-#               
-#         A BLE Terminal app can be used to send mode and color change requests to the program      
-#         I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
-#           Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly      
-#               
-#           COMMANDS:  
-#             Mode commands change the animation pattern    
-#               MODE:RBFADE     sets the strip to a continuous end-to-end rainbow fade
-#               MODE:CYLON      a multi-spot "Larsen Scanner" that goes back and forth
-#               MODE:METEOR     a multi-spot "raindrop" effect that goes in one direction
-#               MODE:THEATER    a classic theater marquee chase effect
-#               MODE:PULSE      a fade-up/fade-down effect across the whole strip
-#               MODE:SPLIT      a mirrored meteor effect that either emits from or meets in the center of the strip
-#                     (successive commands reverse the direction)
-#               MODE:DB         double meteor effect flying in both directions simultaneously
-#               MODE:HC         a cylon effect that alternates between blue and white along the whole strip
-#               MODE:HM         a meteor effect that alternates between blue and white along the whole strip
-#               MODE:FL         a meteor effect that has alternate blue and white meteors at the same time
-#               
-#           Color commands do not change the animation, but change the color used by them.
-#                   color commands will deactivate the rainbow mode.
-#               RGB:r,g,b       set the strip global color to an RGB value#               
-#             it is easier to use some presets 
-#               COLOR:WHITE     set the whole strip white 
-#               COLOR:IN        set the whole strip to indigo   (always looks purple to me, while violet looks pink)            
-#               COLOR:BL        set the whole strip to blue
-#               COLOR:GR        set the whole strip to green
-#               COLOR:YL        set the whole strip to yellow
-#               COLOR:OG        set the whole strip to orange
-#               COLOR:RD        set the whole strip to red
-#           Rainbow commands trigger a color progression while the pattern runs
-#               RAINBOW:1        activate the rainbow modes
-#               RAINBOW:0        deactivate the rainbow modes. (Has no effect on rainbow fade or chase if active)
-#
-#               SLEEP        set the whole strip off, but leave the program running
-#
-#               E#nnnn        change the number of "eyes" for meteors and cylons from the default of 6
-#               S#nnnn        change the number of eyes in the split meteor pattern from the default of 4
-#
-#
-#--------------------------------------------------------------------------------------------------------#*/
+  #
+  #         BLE Beetle Belt v6
+  #           A wearable NeoPixel project by Kevin Roche
+  #
+  #         Animates a  strip of RBG WS5812B addressable LEDs (NeoPixels) via the
+  #         DFRobot BLE Beetle Arduino variant.
+  #           uses the Adafruit_NeoPixel library, as well as the EEPROM library
+  #
+  #
+  #
+  #         NeoPixel data connection should be connected to pin D5 on the BLE Beetle
+  #
+  #         A BLE Terminal app can be used to send mode and color change requests to the program
+  #         I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
+  #           Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
+  #
+  #           COMMANDS:
+  #             Mode commands change the animation pattern
+  #               MODE:RBFADE     sets the strip to a continuous end-to-end rainbow fade
+  #               MODE:CYLON      a multi-spot "Larsen Scanner" that goes back and forth
+  #               MODE:METEOR     a multi-spot "raindrop" effect that goes in one direction
+  #               MODE:THEATER    a classic theater marquee chase effect
+  #               MODE:PULSE      a fade-up/fade-down effect across the whole strip
+  #               MODE:SPLIT      a mirrored meteor effect that either emits from or meets in the center of the strip
+  #                     (successive commands reverse the direction)
+  #               MODE:DB         double meteor effect flying in both directions simultaneously
+  #               MODE:HC         a cylon effect that alternates between blue and white along the whole strip
+  #               MODE:HM         a meteor effect that alternates between blue and white along the whole strip
+  #               MODE:FL         a meteor effect that has alternate blue and white meteors at the same time
+  #
+  #           Color commands do not change the animation, but change the color used by them.
+  #                   color commands will deactivate the rainbow mode.
+  #               RGB:r,g,b       set the strip global color to an RGB value#
+  #             it is easier to use some presets
+  #               COLOR:WHITE     set the whole strip white
+  #               COLOR:IN        set the whole strip to indigo   (always looks purple to me, while violet looks pink)
+  #               COLOR:BL        set the whole strip to blue
+  #               COLOR:GR        set the whole strip to green
+  #               COLOR:YL        set the whole strip to yellow
+  #               COLOR:OG        set the whole strip to orange
+  #               COLOR:RD        set the whole strip to red
+  #           Rainbow commands trigger a color progression while the pattern runs
+  #               RAINBOW:1        activate the rainbow modes
+  #               RAINBOW:0        deactivate the rainbow modes. (Has no effect on rainbow fade or chase if active)
+  #
+  #               SLEEP        set the whole strip off, but leave the program running
+  #
+  #               E#nnnn        change the number of "eyes" for meteors and cylons from the default of 6
+  #               S#nnnn        change the number of eyes in the split meteor pattern from the default of 4
+  #
+  #
+  #--------------------------------------------------------------------------------------------------------#*/
 
 #include <Adafruit_NeoPixel.h>
 #include "WS2812_Definitions.h"
@@ -163,14 +163,20 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
         Serial.println(g_color, HEX);
       }
     }
-  }  
-  else if (queue.indexOf("E#") >= 0){
-    newcount = toInt(queue.substring(queue.indexOf("#")+1);
-    if (newcount > 0) { NUM_OF_SPLIT = newcount; }
   }
-  else if (queue.indexOf("S#") >= 0){
-    newcount = toInt(queue.substring(queue.indexOf("#")+1);
-    if (newcount > 0) { NUM_OF_SPLIT = newcount; }
+  else if (queue.indexOf("E#") >= 0) {
+    scratch = queue.substring(queue.indexOf("#") + 1);
+    new_count = scratch.toInt();
+    if (new_count > 0) {
+      NO_OF_SPLIT = new_count;
+    }
+  }
+  else if (queue.indexOf("S#") >= 0) {
+    scratch = queue.substring(queue.indexOf("#") + 1);
+    new_count = scratch.toInt();
+    if (new_count > 0) {
+      NO_OF_SPLIT = new_count;
+    }
   }
   else if (queue.indexOf("MODE") >= 0) {
     if (mydebug) {
@@ -184,12 +190,12 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       rainbowMode = false;
     }
     else if (scratch.indexOf("CYLON") >= 0) {
- //     if (rainbowMode) {
- //       ScannerTask = 2;
- //     }
- //     else {
-        ScannerTask = 12;
- //     }
+      //     if (rainbowMode) {
+      //       ScannerTask = 2;
+      //     }
+      //     else {
+      ScannerTask = 12;
+      //     }
     }
 
     else if (scratch.indexOf("THEA") >= 0) {
@@ -202,12 +208,12 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     }
     else if (scratch.indexOf("MET") >= 0) {
       Serial.println("Activating Meteor Mode with Rainbow" + String(rainbowMode));
-  //    if (rainbowMode) {
-        ScannerTask = 4;
-  //    }
- //     else {
-   //     ScannerTask = 14;
-     // }
+      //    if (rainbowMode) {
+      ScannerTask = 4;
+      //    }
+      //     else {
+      //     ScannerTask = 14;
+      // }
     }
     else if (scratch.indexOf("PULSE") >= 0) {
       ScannerTask = 5 ;
