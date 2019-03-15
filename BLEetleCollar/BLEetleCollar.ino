@@ -309,6 +309,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
   else if (queue.indexOf("RAINBOW") >= 0) {
     if (queue.indexOf("1") > 0) {
       rainbowMode = true;
+      //g_color_index = unWheel(g_color);
     }
     else {
       rainbowMode = false;
@@ -451,7 +452,7 @@ void loop()
       break;
 
     case 7:
-      double_meteor(g_color, scaled_wait / 2, 4);
+      double_meteor(g_color, scaled_wait / 2, 2);
       break;
 
 
@@ -476,7 +477,6 @@ void loop()
       Serial.println(F("Turning off Display Now!"));
       clearLEDS();
       collar.show();
-      //LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
       break;
     default:
       Serial.println(F("Starting default rainbow"));
@@ -688,6 +688,68 @@ uint32_t Wheel(byte WheelPos) {
     WheelPos -= 170;
     return collar.Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
+}
+
+byte unWheel(byte r, byte g, byte b) {
+  byte WheelPos;
+  if (r == 0) {
+    WheelPos = g / 3;
+  }
+  else if (g == 0) {
+    WheelPos = b / 3;
+  }
+  else if (b == 0) {
+    WheelPos = r / 3;
+  }
+  else {
+    WheelPos = 0;
+  }
+  return WheelPos;
+}
+
+byte unWheel (uint32_t color) {
+  byte r = (color & 0xFF0000) >> 16;
+  byte g = (color & 0x00FF00) >> 8;
+  byte b = (color & 0x0000FF);
+  byte WheelPos;
+  Serial.print(F("Calculating color wheel index for "));
+  Serial.println(color, HEX);
+  if (r == 0) {
+    if (g > 0) {
+      Serial.print(F("r is zero, indexing from green"));
+      WheelPos = g / 3;
+    }
+    else {
+      Serial.print(F("r and g are zero, indexing from blue"));
+      WheelPos = b / 3;
+    }
+  }
+  else if (g == 0) {
+   if (b > 0) {
+      Serial.print(F("g is zero, indexing from blue"));
+      WheelPos =  b / 3;
+    }
+    else {
+      Serial.print(F("g and b are zero, indexing from red"));
+      WheelPos = 255 + r / 3;
+    }
+  }
+  else if (b == 0) {
+    if (r > 0) {
+      Serial.print(F("b is zero, indexing from red"));
+      WheelPos = r / 3;
+    }
+    else {
+      Serial.print(F("b and r are zero, indexing from green"));
+      WheelPos = 255+ g / 3;
+    }
+  }
+  else {
+    WheelPos = 0;
+  }
+  WheelPos = WheelPos % 255;
+  Serial.println("WheelPos index is " + WheelPos);
+  return WheelPos;
 }
 
 void AllScans()
