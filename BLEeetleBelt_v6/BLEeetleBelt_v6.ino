@@ -117,7 +117,7 @@ void ChangeMode();
 String bleRead() {
   char newByte;
   String bleQueue;
-
+ // ";" is accepted as a command terminator for compatibility with the Play Bluno App
   if (Serial.available()) {
     while (Serial.available()) {
       newByte = Serial.read();
