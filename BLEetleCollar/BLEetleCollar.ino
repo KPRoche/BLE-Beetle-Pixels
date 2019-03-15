@@ -74,7 +74,7 @@ const String FCVers = "BLE Beetle v1:matching belt";
 // globals
 int LED_COUNT = 38;
 int BELT_COUNT = 120;
-int NO_OF_SPLIT = 6;
+int NO_OF_SPLIT = 2;
 int NO_OF_EYES = 2;
 int SCAN_WAIT = 20;
 int commDelay = 5;
@@ -360,9 +360,6 @@ void setup()
 {
   Serial.begin(115200);  //initial the Serial port. BLE Beetle runs BLE and USB serial in parallel
   pinMode(13, OUTPUT);
-
-
-  Serial.begin(9600);
   // Read the stored task from last time and modulo it
   Serial.print(F("Flashy Collar with Sleep version "));
   Serial.println(FCVers);
