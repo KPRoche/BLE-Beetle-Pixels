@@ -62,11 +62,8 @@ const String myVersion = "BLE Beetle Neo Simple";
 
 // Globals
 byte ScannerTask = 0;
-byte MaxTask = 19;
-int LED_COUNT = 120;
-int NO_OF_EYES = 6;
-int NO_OF_SPLIT = 6;
-int masterEyes = 2 * (LED_COUNT / 52);
+byte MaxTask = 2;
+int LED_COUNT = 5;
 int SCAN_WAIT = 20;
 int commDelay = 5;
 boolean rainbowMode = false;
@@ -87,9 +84,7 @@ Adafruit_NeoPixel lights = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ80
 //function prototypes
 void clearLEDS();
 void setColor(uint32_t color, byte brightness = 64);
-
 void colorFade(uint8_t wait, unsigned long color = WHITE,  byte stepsize = 25, byte maxBrightness = 64);
-
 uint32_t rainbowOrder(byte position);
 uint32_t Wheel(byte WheelPos);
 
@@ -277,7 +272,7 @@ void setup() {
   Serial.begin(115200);  //initial the Serial port. BLE Beetle runs BLE and USB serial in parallel
   pinMode(13, OUTPUT);
 
-  Serial.print(F("Flashy Belt with Sleep version "));
+  Serial.print(F("NeoPixel Control version "));
   Serial.println(myVersion);
   ScannerTask = EEPROM.read(0);
   Serial.print(F("Stored ScannerTask: "));
@@ -299,7 +294,7 @@ void setup() {
 
 void loop() {
   processBLEcmd("", g_debug);
-  lights.setBrightness(64);
+  lights.setBrightness(g_brightness);
   Serial.println("ScannerTask: " + String(ScannerTask));
   if (rainbowMode) {
     g_color_index++;
@@ -334,47 +329,10 @@ void loop() {
     default:
       setColor(g_color, g_brightness);
   }
-
+  delay(SCAN_WAIT);
 }
 
 //*************************** FUNCTIONS **************************
-//*********************************************************************************************
-// Input a value 0 to 191 to get a color value.
-// The colors are a transition red->yellow->green->aqua->blue->fuchsia->red...
-//  Adapted from Wheel function in the Adafruit_NeoPixel library example sketch
-uint32_t rainbowOrder(byte position)
-{
-  // 6 total zones of color change:
-  if (position < 31)  // Red -> Yellow (Red = FF, blue = 0, green goes 00-FF)
-  {
-    return lights.Color(0xFF, position * 8, 0);
-  }
-  else if (position < 63)  // Yellow -> Green (Green = FF, blue = 0, red goes FF->00)
-  {
-    position -= 31;
-    return lights.Color(0xFF - position * 8, 0xFF, 0);
-  }
-  else if (position < 95)  // Green->Aqua (Green = FF, red = 0, blue goes 00->FF)
-  {
-    position -= 63;
-    return lights.Color(0, 0xFF, position * 8);
-  }
-  else if (position < 127)  // Aqua->Blue (Blue = FF, red = 0, green goes FF->00)
-  {
-    position -= 95;
-    return lights.Color(0, 0xFF - position * 8, 0xFF);
-  }
-  else if (position < 159)  // Blue->Fuchsia (Blue = FF, green = 0, red goes 00->FF)
-  {
-    position -= 127;
-    return lights.Color(position * 8, 0, 0xFF);
-  }
-  else  //160 <position< 191   Fuchsia->Red (Red = FF, green = 0, blue goes FF->00)
-  {
-    position -= 159;
-    return lights.Color(0xFF, 0x00, 0xFF - position * 8);
-  }
-}
 
 //*********************************************************************************************
 // Input a value 0 to 255 to get a color value.
