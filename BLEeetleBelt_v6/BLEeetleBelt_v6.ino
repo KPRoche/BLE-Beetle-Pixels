@@ -86,6 +86,7 @@ uint32_t g_color = BLUE;
 byte g_color_index = 0;
 byte g_direction = true; // for splits
 boolean g_debug = false;
+byte g_brightness = 64;
 
 String ble = "";
 
@@ -177,7 +178,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     scratch = queue.substring(queue.indexOf("#") + 1);
     new_count = scratch.toInt();
     if (new_count > 0) {
-      NO_OF_SPLIT = new_count;
+      NO_OF_EYES = new_count;
     }
   }
   else if (queue.indexOf("S#") >= 0) {
@@ -303,7 +304,11 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Color command: " + scratch + ":" );
     Serial.println(g_color, HEX);
   }
-
+// Set the brightness
+  else if (queue.indexOf("BRIGHT") >= 0) {
+    scratch = queue.substring(queue.indexOf(":") + 1);
+    g_brightness = scratch.toInt() % 255;
+  }
   // This command implements the color-wheel options
   else if (queue.indexOf("RAINBOW") >= 0) {
     if (queue.indexOf("1") > 0) {
@@ -376,14 +381,14 @@ void setup() {
   clearLEDS();   // This function, defined below, turns all lights off...
   lights.show();   // ...but the lights don't actually update until you call this.
 
-  lights.setBrightness(64);
+  lights.setBrightness(g_brightness);
 
 
 }
 
 void loop() {
   processBLEcmd("", g_debug);
-  lights.setBrightness(64);
+  lights.setBrightness(g_brightness);
   Serial.println("ScannerTask: " + String(ScannerTask));
   if (rainbowMode) {
     g_color_index++;

@@ -84,6 +84,7 @@ uint32_t g_color = BLUE;
 byte g_color_index = 0;
 byte g_direction = true; // for splits
 boolean g_debug = false;
+byte g_brightness = 64;
 
 float belt2collar = BELT_COUNT / LED_COUNT;
 int scaled_wait = SCAN_WAIT * belt2collar;
@@ -118,7 +119,7 @@ void AllScans();
 String bleRead() {
   char newByte;
   String bleQueue;
-// ";" is accepted as a command terminator for compatibility with the Play Bluno App
+  // ";" is accepted as a command terminator for compatibility with the Play Bluno App
   if (Serial.available()) {
     while (Serial.available()) {
       newByte = Serial.read();
@@ -178,7 +179,7 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     scratch = queue.substring(queue.indexOf("#") + 1);
     new_count = scratch.toInt();
     if (new_count > 0) {
-      NO_OF_SPLIT = new_count;
+      NO_OF_EYES = new_count;
     }
   }
   else if (queue.indexOf("S#") >= 0) {
@@ -304,7 +305,11 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.print("Color command: " + scratch + ":" );
     Serial.println(g_color, HEX);
   }
-
+  // Set the brightness
+  else if (queue.indexOf("BRIGHT") >= 0) {
+    scratch = queue.substring(queue.indexOf(":") + 1);
+    g_brightness = scratch.toInt() % 255;
+  }
   // This command implements the color-wheel options
   else if (queue.indexOf("RAINBOW") >= 0) {
     if (queue.indexOf("1") > 0) {
@@ -378,7 +383,7 @@ void setup()
   clearLEDS();   // This function, defined below, turns all collar off...
   collar.show();   // ...but the collar don't actually update until you call this.
 
-  collar.setBrightness(64);
+  collar.setBrightness(g_brightness);
 
 
 }
@@ -443,7 +448,7 @@ void loop()
     //pulse (fade) mode
     case 5:
       Serial.println(F("Beginning fade now!"));
-      colorFade(25, g_color, 2);
+      colorFade(25, g_color, 2, g_brightness);
       break;
 
     // New double and split meteor modes
@@ -725,7 +730,7 @@ byte unWheel (uint32_t color) {
     }
   }
   else if (g == 0) {
-   if (b > 0) {
+    if (b > 0) {
       Serial.print(F("g is zero, indexing from blue"));
       WheelPos =  b / 3;
     }
@@ -741,7 +746,7 @@ byte unWheel (uint32_t color) {
     }
     else {
       Serial.print(F("b and r are zero, indexing from green"));
-      WheelPos = 255+ g / 3;
+      WheelPos = 255 + g / 3;
     }
   }
   else {

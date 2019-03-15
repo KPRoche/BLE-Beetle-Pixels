@@ -317,7 +317,7 @@ void loop() {
       break;
     case 1:
       //pulse (fade) mode
-      colorFade(25, g_color, 2);
+      colorFade(25, g_color, 2, g_brightness);
       break;
     case 20:
       Serial.println(F("Turning off Display Now!!"));
