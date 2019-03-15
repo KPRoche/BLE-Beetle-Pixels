@@ -2,7 +2,7 @@
   #
   #         BLE Beetle Simple NeoPixel control
   #           A NeoPixel project by Kevin Roche
-  #             designed for controlling the color of a few NeoPixels 
+  #             designed for controlling the color of a few NeoPixels
   #             based on my Arduino BLE Belt code
   #         Controls RBG WS5812B addressable LEDs (NeoPixels) via the
   #         DFRobot BLE Beetle Arduino variant.
@@ -14,10 +14,12 @@
   #         I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
   #           Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
   #         This program recognizes a semicolon (;) as the end of a command as well as carriage return or linefeed,
-  #           and can recognize color requests from the RGB picker in the PLAY Bluno app. 
+  #           and can recognize color requests from the RGB picker in the PLAY Bluno app.
   #          (That app sends a lot of extraneous data, I recommend using a simpler terminal, however)
   #
-  #           COMMANDS:
+  #           COMMANDS: (Rainbow mode can make these progress around the color wheel)
+  #               MODE:PULSE      a fade-up/fade-down effect across all LEDs
+  #               MODE:ON         turn them on continously
   #
   #           Color commands do not change the animation, but change the color used by them.
   #                   color commands will deactivate the rainbow mode.
@@ -33,6 +35,7 @@
   #               COLOR:YL        set the whole strip to yellow
   #               COLOR:OG        set the whole strip to orange
   #               COLOR:RD        set the whole strip to red
+  #               BRIGHT:nnn      set the pixels to brightness nnn (0-255). NOTE this may change the hue.
   #
   #           Rainbow commands trigger a color progression while the pattern runs
   #               RAINBOW:1        activate the rainbow modes
@@ -72,6 +75,7 @@ uint32_t g_color = BLUE;
 byte g_color_index = 0;
 byte g_direction = true; // for splits
 boolean g_debug = false;
+byte g_brightness = 64;
 
 String ble = "";
 
@@ -82,19 +86,13 @@ Adafruit_NeoPixel lights = Adafruit_NeoPixel(LED_COUNT, PIN, NEO_GRB + NEO_KHZ80
 
 //function prototypes
 void clearLEDS();
-void theaterChaseRainbow(uint8_t wait);
-void theaterChaseColor(uint8_t wait, unsigned long color = WHITE );
-void multi_cylon(unsigned long color, byte wait, int num_eyes = 3);
-void multi_meteor(unsigned long color, byte wait, int num_eyes, boolean roundabout = false);
-void split_meteor(unsigned long color, byte wait, int num_eyes, boolean outward = false);
-void double_meteor(unsigned long color, byte wait, int num_eyes);
+void setColor(uint32_t color, byte brightness = 64);
+
 void colorFade(uint8_t wait, unsigned long color = WHITE,  byte stepsize = 25, byte maxBrightness = 64);
-void rainbow(byte startPosition);
+
 uint32_t rainbowOrder(byte position);
 uint32_t Wheel(byte WheelPos);
-void finland( byte wait, int num_eyes);
-void AllScans();
-void ChangeMode();
+
 
 // -------------------   Bluetooth BLE functions for BLUNO (BLE Beetle) using the TI CC2540 BLE chip
 
@@ -134,8 +132,13 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     Serial.println("Raw Queue: " + queue);
   }
   queue.toUpperCase(); // this makes the string scans work even if you use mixed case in your terminal
-  if (queue.indexOf("RGB") >= 0) {
-    scratch = queue.substring(queue.indexOf(":") + 1);
+  if (queue.indexOf("RGB") >= 0) { // set to work with RGB wheel in Play Bluno app
+    if (queue.indexOf(">") > 0 ) {
+      scratch = queue.substring(queue.indexOf(">") + 1);
+    }
+    else {
+      scratch = queue.substring(queue.indexOf(":") + 1);
+    }
     if (scratch == "0,0,0") {
       Serial.println("LED control deactivated");
     }
@@ -158,38 +161,6 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
       }
     }
   }
-  // This section is for special control parameters (modifying defaults)
-  else if (queue.indexOf("E#") >= 0) {
-    scratch = queue.substring(queue.indexOf("#") + 1);
-    new_count = scratch.toInt();
-    if (new_count > 0) {
-      NO_OF_SPLIT = new_count;
-    }
-  }
-  else if (queue.indexOf("S#") >= 0) {
-    scratch = queue.substring(queue.indexOf("#") + 1);
-    new_count = scratch.toInt();
-    if (new_count > 0) {
-      if (new_count % 2 == 1) {
-        new_count++;  // increment to an even number if necessary
-      }
-      NO_OF_SPLIT = new_count;
-    }
-  }
-  else if (queue.indexOf("C#") >= 0) {
-    scratch = queue.substring(queue.indexOf("#") + 1);
-    new_count = scratch.toInt();
-    if (new_count > 0) {
-      commDelay = new_count;
-    }
-  }
-  else if (queue.indexOf("D#") >= 0) {
-    scratch = queue.substring(queue.indexOf("#") + 1);
-    new_count = scratch.toInt();
-    if (new_count > 0) {
-      SCAN_WAIT = new_count;
-    }
-  }
   // This section is mode commands, controlling the patterns
   else if (queue.indexOf("MODE") >= 0) {
     if (mydebug) {
@@ -198,62 +169,16 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     scratch = queue.substring(queue.indexOf(":") + 1);
     scratch.toUpperCase();
     Serial.println("Mode command: " + scratch);
-    if (scratch.indexOf("RBFADE") >= 0) {
-      ScannerTask = 1;
-      rainbowMode = false;
+    if (scratch.indexOf("PULSE") >= 0) {
+      ScannerTask = 1 ;
     }
-    else if (scratch.indexOf("CYLON") >= 0) {
-      //     if (rainbowMode) {
-      //       ScannerTask = 2;
-      //     }
-      //     else {
-      ScannerTask = 12;
-      //     }
+    else if (scratch.indexOf("ON") >= 0) {
+      ScannerTask = 0 ;
     }
-
-    else if (scratch.indexOf("THEA") >= 0) {
-      if (rainbowMode) {
-        ScannerTask = 3;
-      }
-      else {
-        ScannerTask = 13;
-      }
-    }
-    else if (scratch.indexOf("MET") >= 0) {
-      Serial.println("Activating Meteor Mode with Rainbow" + String(rainbowMode));
-      //    if (rainbowMode) {
-      ScannerTask = 4;
-      //    }
-      //     else {
-      //     ScannerTask = 14;
-      // }
-    }
-    else if (scratch.indexOf("PULSE") >= 0) {
-      ScannerTask = 5 ;
-    }
-    else if (scratch.indexOf("SPLIT") >= 0) {
-      g_direction = ! g_direction;
-      ScannerTask = 6 ;
-    }
-    else if (scratch.indexOf("DB") >= 0) {
-      ScannerTask = 7;
-      rainbowMode = false;
-    }
-
-    else if (scratch.indexOf("HC") >= 0) {
-      ScannerTask = 8 ;
-      rainbowMode = false;
-    }
-    else if (scratch.indexOf("HM") >= 0) {
-      ScannerTask = 9;
-      rainbowMode = false;
-    }
-    else if (scratch.indexOf("FL") >= 0) {
-      ScannerTask = 10;
-      rainbowMode = false;
+    else {
+      ScannerTask = 0;
     }
   }
-
   // This section is the color commands, to pick one of the preset colors
   else if (queue.indexOf("COLOR") >= 0) {
     scratch = queue.substring(queue.indexOf(":") + 1);
@@ -288,6 +213,11 @@ void processBLEcmd(String queue = "", boolean mydebug = false) {
     }
     Serial.print("Color command: " + scratch + ":" );
     Serial.println(g_color, HEX);
+  }
+  // Set the brightness
+  else if (queue.indexOf("BRIGHT") >= 0) {
+    scratch = queue.substring(queue.indexOf(":") + 1);
+    g_brightness = scratch.toInt() % 255;
   }
 
   // This command implements the color-wheel options
@@ -362,7 +292,7 @@ void setup() {
   clearLEDS();   // This function, defined below, turns all lights off...
   lights.show();   // ...but the lights don't actually update until you call this.
 
-  lights.setBrightness(64);
+  lights.setBrightness(g_brightness);
 
 
 }
@@ -384,77 +314,16 @@ void loop() {
   digitalWrite(13, HIGH);
   delay(5);
   digitalWrite(13, LOW);
-  Serial.print(F("Flashy Belt with Sleep version "));
+  Serial.print(F("Simple NeoPixel control "));
   Serial.println(myVersion);
   switch (ScannerTask) {
-      //   case 0:
-      //     Serial.println(F("Starting AllScans"));
-      //     AllScans();
+    case 0:
+      setColor(g_color, g_brightness);
       break;
     case 1:
-      Serial.println(F("Starting rainbow"));
-      for (int i = LED_COUNT * 2; i >= 0; i--)
-      {
-        rainbow(i);
-        delay(20);  // Delay between rainbow slides
-      }
-      break;
-
-    // "Larson" scanner (Cylon eye)
-    case 2:
-    case 12: // break omitted, keeping both cases because of increment-on-start. Rainbow mode flag will now do color rotation
-      Serial.print(F("Flashy Belt with Sleep version "));
-      Serial.println(myVersion);
-      Serial.println(F("Starting Larson scanner"));
-      multi_cylon(g_color, SCAN_WAIT, NO_OF_EYES); // Indigo cylon eye!
-      break;
-
-    // Theater Chases
-    case 3: // the rainbow version is distinctly different from the mono version
-      Serial.print(F("Flashy Belt with Sleep version "));
-      Serial.println(myVersion);
-      Serial.println(F("Starting Theater Chase"));
-      theaterChaseRainbow(50);
-      break;
-    case 13:
-      Serial.println(F("Starting Theater Chase"));
-      theaterChaseColor(50, g_color);
-      break;
-
-    case 4:  // the rainbow mode flag takes care of color rotation
-    case 14:
-      Serial.println(F("Starting meteor"));
-      multi_meteor(g_color, SCAN_WAIT / 2, NO_OF_EYES); // Indigo meteor eye!
-      break;
-
       //pulse (fade) mode
-    case 5:
       colorFade(25, g_color, 2);
       break;
-      
-    case 6:
-      split_meteor(g_color, SCAN_WAIT / 2, NO_OF_SPLIT, g_direction); // Indigo meteor eye!
-      break;
-    case 7:
-      double_meteor(g_color, SCAN_WAIT / 2, 4);
-      break;
-
-    // Helsinki (blue and white) specials 
-    case 8:
-      Serial.println(F("Starting Helsinki Cylon)"));
-      multi_cylon(WHITE, SCAN_WAIT, NO_OF_EYES); // WHITE cylon eye!
-      multi_cylon(BLUE, SCAN_WAIT, NO_OF_EYES); // BLUE meteor eye!
-      break;
-    case 9:
-      Serial.println(F("Starting Helsinki Meteor)"));
-      multi_meteor(WHITE, SCAN_WAIT / 2, NO_OF_EYES); // WHITE cylon eye!
-      multi_meteor(BLUE, SCAN_WAIT / 2, NO_OF_EYES); // BLUE meteor eye!
-      break;
-    case 10:
-      Serial.println(F("Starting Finland meteor"));
-      finland( SCAN_WAIT / 2, NO_OF_EYES);
-      break;
-
     case 20:
       Serial.println(F("Turning off Display Now!!"));
       //delay(300);
@@ -463,332 +332,12 @@ void loop() {
       //LowPower.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF);
       break;
     default:
-      for (int i = LED_COUNT * 2; i >= 0; i--)
-      {
-        rainbow(i);
-        delay(20);  // Delay between rainbow slides
-      }
+      setColor(g_color, g_brightness);
   }
 
 }
 
 //*************************** FUNCTIONS **************************
-//ChangeMode Increments the scanner mode without requiring a power cycle
-void ChangeMode() {
-  Serial.print("Interrupt Request Detected...");
-  Serial.print("Stored ScannerTask: ");
-  Serial.println(ScannerTask);
-  ScannerTask++;
-  if (ScannerTask > MaxTask) {
-    ScannerTask = 0;
-  }
-  Serial.print("New ScannerTask: ");
-  Serial.println(ScannerTask);
-  // store it to eeprom
-  EEPROM.write(0, ScannerTask);
-
-}
-
-
-
-
-//*********************************************************************************************
-// Sets all LEDS to off, but DOES NOT update the display;
-// call lights.show() and to actually turn them off after this.
-void clearLEDS()
-{
-  for (int i = 0; i < LED_COUNT; i++)
-  {
-    lights.setPixelColor(i, 0);
-  }
-}
-
-
-//*********************************************************************************************
-
-//Theatre-style crawling lights with rainbow effect
-void theaterChaseRainbow(uint8_t wait) {
-  for (int j = 0; j < 256; j += 4) { // cycle all 256 colors in the wheel
-    for (int q = 0; q < 3; q++) {
-      for (int i = 0; i < lights.numPixels(); i = i + 3) {
-        lights.setPixelColor(i + q, Wheel( (i + j) % 255)); //turn every third pixel on
-
-      }
-      lights.show();
-      delay(wait);
-      for (int i = 0; i < lights.numPixels(); i = i + 3) {
-        lights.setPixelColor(i + q, 0);      //turn every third pixel off
-      }
-    }
-  }
-}
-
-//Theatre-style crawling lights in a single color
-void theaterChaseColor(uint8_t wait, unsigned long color) {
-
-  for (int q = 0; q < 3; q++) {
-    for (int i = 0; i < lights.numPixels(); i = i + 3) {
-      lights.setPixelColor(i + q, color); //turn every third pixel on
-    }
-    lights.show();
-    delay(wait);
-    for (int i = 0; i < lights.numPixels(); i = i + 3) {
-      lights.setPixelColor(i + q, 0);      //turn every third pixel off
-
-    }
-  }
-
-}
-
-//**********************************************************************************
-// Implements a little triple larson "cylon" sanner.
-// This'll run one full cycle, down one way and back the other
-void multi_cylon(unsigned long color, byte wait, int num_eyes)
-{
-  // weight determines how much lighter the outer "eye" colors are
-  const byte weight = 4;
-  // It'll be easier to decrement each of these colors individually
-  // so we'll split them out of the 24-bit color value
-  byte red = (color & 0xFF0000) >> 16;
-  byte green = (color & 0x00FF00) >> 8;
-  byte blue = (color & 0x0000FF);
-  int gap = LED_COUNT / num_eyes;
-  Serial.print("number of eyes: ");
-  Serial.println(num_eyes);
-  // Start at closest LED, and move to the outside
-  for (int i = 0; i <= gap; i++)
-  {
-    clearLEDS();
-    for (int e = 0; e < num_eyes; e++)
-    {
-      lights.setPixelColor(i + e * gap , red, green, blue);  // Set the bright middle eye
-    }
-
-    // Now set two eyes to each side to get progressively dimmer
-
-    for (int j = 1; j < 3; j++)
-    {
-      if (i - j >= 0) {
-        for (int e = 0; e < num_eyes; e++)
-        {
-          lights.setPixelColor(e * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-        }
-      }
-      if (i - j <= LED_COUNT) {
-        for (int e = 0; e < num_eyes; e++)
-        {
-          lights.setPixelColor(e * gap + i + j, red / (weight * j), green / (weight * j), blue / (weight * j));
-        }
-      }
-    }
-    lights.show();  // Turn the lights on
-    delay(wait);  // Delay for visibility
-  }
-  // Now we go back to where we came. Do the same thing.
-  for (int i = gap - 2; i >= 1; i--)
-  {
-    clearLEDS();
-    for (int e = 0; e < num_eyes; e++)
-    {
-      lights.setPixelColor(e * gap + i, red, green, blue);
-    }
-    for (int j = 1; j < 3; j++)
-    {
-      if (i - j >= 0) {
-        for (int e = 0; e < num_eyes; e++)
-        {
-          lights.setPixelColor(e * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-        }
-      }
-      if (i - j <= LED_COUNT) {
-        for (int e = 0; e < num_eyes; e++)
-        {
-          lights.setPixelColor(i + j, red / (weight * j), green / (weight * j), blue / (weight * j));
-        }
-      }
-    }
-    lights.show();
-    delay(wait);
-  }
-}
-
-
-
-
-
-
-//****************************
-// Implements a little cascade with a fade effect
-void multi_meteor(unsigned long color, byte wait, int num_eyes, boolean roundabout)
-{
-  const byte weight = 4;
-  // It'll be easier to decrement each of these colors individually
-  // so we'll split them out of the 24-bit color value
-  byte red = (color & 0xFF0000) >> 16;
-  byte green = (color & 0x00FF00) >> 8;
-  byte blue = (color & 0x0000FF);
-
-  Serial.print("number of eyes: ");
-  Serial.println(num_eyes);
-
-  int gap = LED_COUNT / num_eyes;
-  // Start at closest LED, and move to the outside
-  for (int i = 0; i <= gap; i++)
-  {
-    clearLEDS();
-    for (int g = 0; g < num_eyes; g++) {
-      lights.setPixelColor(i + g * gap, red, green, blue); // Set the bright middle eye
-      // Now set four eyes after to get progressively dimmer
-      for (int j = 1; j < 5; j++)
-      {
-        if (i - j > 0)
-          for (int k = 0; k < num_eyes; k++) {
-            lights.setPixelColor(k * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-          }
-      }
-      lights.show();  // Turn the lights on
-
-      delay(wait / 2); // Delay for visibility
-    }
-  }
-}
-//****************************
-
-// Implements a little cascade with a fade effect that starts at the ends and runs to the center
-void split_meteor(unsigned long color, byte wait, int num_eyes, boolean outward)
-{
-  const byte weight = 4;
-  // It'll be easier to decrement each of these colors individually
-  // so we'll split them out of the 24-bit color value
-  byte red = (color & 0xFF0000) >> 16;
-  byte green = (color & 0x00FF00) >> 8;
-  byte blue = (color & 0x0000FF);
-  int offset = 0;
-
-  Serial.print("Split Meteor number of eyes: " + String(num_eyes) + " ");
-  Serial.println("outward: " + String(outward));
-
-  int gap = (LED_COUNT ) / num_eyes;
-  // Start at outside LEDs, and move to the center
-  // Start at closest LED, and move to the outside
-  for (int i = 0; i <= gap; i++)
-  {
-    clearLEDS();
-    if (outward) {
-      for (int g = 0; g < num_eyes; g++) {
-
-        if ((LED_COUNT / 2) + i + g * gap < LED_COUNT) {
-          lights.setPixelColor((LED_COUNT / 2) + i + g * gap, red, green, blue); // Set the bright middle eye
-        }
-        if ((LED_COUNT / 2 - (i + g * gap) > 0)) {
-          lights.setPixelColor(LED_COUNT / 2 - ( i + g * gap), red, green, blue); // Set the bright middle eye
-        }
-        // Now set four eyes after to get progressively dimmer
-        for (int j = 1; j < 5; j++)
-        {
-          if (i - j > 0)
-            for (int k = 0; k < num_eyes; k++) {
-              offset = (k * gap) + i - j;
-              lights.setPixelColor(LED_COUNT / 2 + offset, red / (weight * j), green / (weight * j), blue / (weight * j));
-              lights.setPixelColor(LED_COUNT / 2 - offset, red / (weight * j), green / (weight * j), blue / (weight * j));
-            }
-        }
-      }
-
-    }
-    else { // not outward
-      for (int g = 0; g < num_eyes / 2; g++) {
-        if (i + g * gap <= LED_COUNT / 2) {
-          lights.setPixelColor(i + g * gap, red, green, blue); // Set the bright spot
-          lights.setPixelColor(LED_COUNT - (i + g * gap), red, green, blue); // Set the bright spot
-          for (int j = 1; j < 5; j++)
-          {
-            if (i - j > 0)
-              for (int k = 0; k < num_eyes / 2; k++) {
-
-                lights.setPixelColor(k * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-                lights.setPixelColor(LED_COUNT - (k * gap + i - j), red / (weight * j), green / (weight * j), blue / (weight * j));
-
-              }
-          }
-        }
-      }
-    }
-    lights.show();  // Turn the lights on
-
-    delay(wait * 2); // Delay for visibility
-  }
-}
-
-
-// Implements a little cascade with a fade effect that starts at the ends and runs to the center
-void double_meteor(unsigned long color, byte wait, int num_eyes)
-{
-  const byte weight = 4;
-  // It'll be easier to decrement each of these colors individually
-  // so we'll split them out of the 24-bit color value
-  byte red = (color & 0xFF0000) >> 16;
-  byte green = (color & 0x00FF00) >> 8;
-  byte blue = (color & 0x0000FF);
-
-  Serial.print("double Meteor number of eyes: ");
-  Serial.println(num_eyes);
-
-  int gap = (LED_COUNT ) / num_eyes;
-  // Start at outside LEDs, and move to the center
-  for (int i = 0; i <= gap; i++)
-  {
-    clearLEDS();
-    for (int g = 0; g < (num_eyes); g++) {
-
-      lights.setPixelColor(i + g * gap, red, green, blue); // Set the bright middle eye
-      lights.setPixelColor(LED_COUNT - (i + g * gap), red, green, blue); // Set the bright middle eye
-
-      // Now set four eyes after to get progressively dimmer
-      for (int j = 1; j < 5; j++)
-      {
-        if (i - j > 0)
-          for (int k = 0; k < num_eyes; k++) {
-
-            lights.setPixelColor(k * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-            lights.setPixelColor(LED_COUNT - (k * gap + i - j), red / (weight * j), green / (weight * j), blue / (weight * j));
-
-          }
-      }
-      lights.show();  // Turn the lights on
-
-      delay(wait / 2); // Delay for visibility
-    }
-  }
-}
-
-
-
-
-
-
-//*********************************************************************************************
-// Prints a rainbow on the LED strip.
-//  The rainbow begins at a specified position on the color wheel
-void rainbow(byte startPosition)
-{
-  // Need to scale our rainbow. We want a variety of colors, even if there
-  // are just 10 or so pixels.
-  int rainbowScale = 192 / LED_COUNT;
-
-
-  // Next we setup each pixel with the right color
-  for (int i = 0; i < LED_COUNT; i++)
-  {
-    lights.setPixelColor(i, rainbowOrder((rainbowScale * (i + startPosition)) % 192));
-
-  }
-  lights.show();
-  processBLEcmd();
-
-}
-
-
 //*********************************************************************************************
 // Input a value 0 to 191 to get a color value.
 // The colors are a transition red->yellow->green->aqua->blue->fuchsia->red...
@@ -847,91 +396,30 @@ uint32_t Wheel(byte WheelPos) {
 
 
 //*********************************************************************************************
-void AllScans()
+// Sets all LEDS to off, but DOES NOT update the display;
+// call lights.show() and to actually turn them off after this.
+void clearLEDS()
 {
-  for (int reps = 0; reps < ALL_SCANS_COUNT; reps++) {
-    for (int i = LED_COUNT * 10; i >= 0; i--)
-    {
-      rainbow(i);
-      delay(20);  // Delay between rainbow slides
-    }
-  }
-  for (int reps = 0; reps < ALL_SCANS_COUNT; reps++) {
-    multi_cylon(INDIGO, SCAN_WAIT, NO_OF_EYES); // Indigo cylon eye!
-    multi_cylon(BLUE, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_cylon eye!
-    multi_cylon(GREEN, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_cylon eye!
-    multi_cylon(YELLOW, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_cylon eye!
-    multi_cylon(ORANGERED, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_cylon eye!
-    multi_cylon(DARKRED, SCAN_WAIT, NO_OF_EYES); // Indigo cylon eye!
-  }
-  for (int reps = 0; reps < ALL_SCANS_COUNT; reps++) {
-    theaterChaseRainbow(60);
-  }
-  for (int reps = 0; reps < ALL_SCANS_COUNT; reps++) {
-    multi_meteor(INDIGO, SCAN_WAIT, NO_OF_EYES); // Indigo cylon eye!
-    multi_meteor(BLUE, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_meteor eye!
-    multi_meteor(GREEN, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_meteor eye!
-    multi_meteor(YELLOW, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_meteor eye!
-    multi_meteor(ORANGERED, SCAN_WAIT, NO_OF_EYES); // Indigo  multi_meteor eye!
-    multi_meteor(DARKRED, SCAN_WAIT, NO_OF_EYES); // Indigo cylon eye!
+  for (int i = 0; i < LED_COUNT; i++)
+  {
+    lights.setPixelColor(i, 0);
   }
 }
 
 //*********************************************************************************************
-//*********************************************************************************************
-void finland( byte wait, int num_eyes)
+// Sets all LEDS to one color, but DOES NOT update the display;
+// call lights.show() and to actually turn them off after this.
+void setColor(uint32_t color, byte brightness)
 {
-  const byte weight = 4;
-  // It'll be easier to decrement each of these colors individually
-  // so we'll split them out of the 24-bit color value
-  byte red = (WHITE & 0xFF0000) >> 16;
-  byte green = (WHITE & 0x00FF00) >> 8;
-  byte blue = (WHITE & 0x0000FF);
-  int gap = LED_COUNT / num_eyes;
-  // Start at closest LED, and move to the outside
-  for (int m = 0; m < num_eyes; m++) {
-    for (int i = 0; i <= gap; i = i + 2)
-    {
-      clearLEDS();
-      red = (WHITE & 0xFF0000) >> 16;
-      green = (WHITE & 0x00FF00) >> 8;
-      blue = (WHITE & 0x0000FF);
-      for (int g = 0; g < num_eyes; g = g + 2) {
-        lights.setPixelColor(i + g * gap, red, green, blue); // Set the bright middle eye
-
-      }
-      // Now set four eyes after to get progressively dimmer
-      for (int j = 1; j < 5; j++)
-      {
-        if (i - j >= 0)
-          for (int k = 0; k < num_eyes; k++) {
-            lights.setPixelColor(k * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-
-          }
-        red = (BLUE & 0xFF0000) >> 16;
-        green = (BLUE & 0x00FF00) >> 8;
-        blue = (BLUE & 0x0000FF);
-        for (int g = 0; g < num_eyes; g = g + 2) {
-          lights.setPixelColor(i + (g + 1) * gap, red, green, blue); // Set the bright middle eye
-
-        }
-
-        // Now set four eyes after to get progressively dimmer
-        for (int j = 1; j < 5; j++)
-        {
-          if (i - j >= 0)
-            for (int k = 0; k < num_eyes; k++) {
-              lights.setPixelColor((k + 1) * gap + i - j, red / (weight * j), green / (weight * j), blue / (weight * j));
-
-            }
-        }
-        lights.show();  // Turn the lights on
-
-        delay(wait);  // Delay for visibility
-      }
-    }
+  for (int i = 0; i < LED_COUNT; i++)
+  {
+    lights.setPixelColor(i, color);
   }
+  lights.setBrightness(brightness);
+  lights.show();
 }
+
+
 
 
 void colorFade(uint8_t wait, unsigned long color,  byte stepsize, byte maxBrightness) {
