@@ -7,7 +7,8 @@
   #         Animates a  strip of RBG WS5812B addressable LEDs (NeoPixels) via the
   #         DFRobot BLE Beetle Arduino variant.
   #           uses the Adafruit_NeoPixel library, as well as the EEPROM library
-  #
+ #         Animations are based on those in the Adafruit_NeoPixel library examples
+ #
   #
   #
   #         NeoPixel data connection should be connected to pin D5 on the BLE Beetle
