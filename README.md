@@ -72,7 +72,9 @@ showing examples of wiring for USB and LiPo use.
 <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3535.jpg" width='250px' align alt-text='close-up of two BLE beetles showing output wiring for NeoPixels. One (short wires) includes a connector for LiPo power connection' >
 <br>
 <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3532.jpg" width='250px' align = 'left' alt-text='close-up of BLE Beetle wired for NeoPixels and LiPo power connection'>
-<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3534.jpg" width='250px' align = 'right' alt-text='close-up of BLE Beetle wired for NeoPixels, no extra power connection'>
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3534.jpg" width='250px' alt-text='close-up of BLE Beetle wired for NeoPixels, no extra power connection'>
+After testing, I recommend covering the board with large heat-shrink tubing or (less-optimal) electrical tape.
+<hr>
 
 ## Software notes 
 A BLE Terminal app can be used to send mode and color change requests to the program
