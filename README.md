@@ -1,3 +1,5 @@
+![Animated GIF of belt and collar](https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/BLE%20Beetle%20Belt-Collar.gif?raw=true)
+      
 # BLE-Beetle-Belt
 Code for several Neopixel (WS2812B addressable LED) projects, run by  a DFRobot BLE Beetle controller
 
