@@ -34,9 +34,9 @@ There are 3 different programs in this repository:
   Single color effects: (which may be rotated through the color wheel via the rainbow option)
   + pulse (fade-up/fade-down)
   + "Larson scanner" (like a Cylon eye) with multiple "eyes"
-  + meteor or raindrop effect   <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-in.gif" align=right width='100px'><img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-out.gif" align=right v_align=bottom width='100px'>
+  + meteor or raindrop effect   <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-in.gif" align=right width='100px' alt-text='inward split meteor animation'><img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-out.gif" align=right alt-text='outward split meTeor animation' width='100px'>
   + split meteor effect either towards or away from center of the strip 
-  + double meteor effect (criss-crossing the length of the strip)<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/double-meteor.gif" align=right v_align=bottom width='100px'>
+  + double meteor effect (criss-crossing the length of the strip)<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/double-meteor.gif" align=right alt-text='double meteor animation' width='100px'>
   
   
   
@@ -65,14 +65,19 @@ for NeoPixels, so the controller can be disconnected from the lighting harness f
 While rated for 5V (easily provided by a USB power bank), the BLE Beetle can also happily run on the 3.7 VDC provided by a LiPo
 (lithium-polymer) battery. Most NeoPixels will also happily run at this voltage, which makes powering small wearables like the collar
 version of this project easier.
-The plus and minus terminals are easy to find as their holes are in the shape of a **+** and a **-**. Here are photos showing examples
-of wiring for USB and LiPo use.
+The plus and minus terminals are easy to find as their holes are in the shape of a **+** and a **-**. Here are some photos 
+showing examples of wiring for USB and LiPo use.
 
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3531.jpg" width='250px' align='left' alt-text='two BLE beetles showing output wiring for NeoPixels. One (short wires) includes a connector for LiPo power connection' >
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3535.jpg" width='250px' align alt-text='close-up of two BLE beetles showing output wiring for NeoPixels. One (short wires) includes a connector for LiPo power connection' >
+<br>
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3532.jpg" width='250px' align = 'left' alt-text='close-up of BLE Beetle wired for NeoPixels and LiPo power connection'>
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3534.jpg" width='250px' align = 'right' alt-text='close-up of BLE Beetle wired for NeoPixels, no extra power connection'>
 
-  
-           A BLE Terminal app can be used to send mode and color change requests to the program
-           I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
-             Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
-           This program recognizes a semicolon (;) as the end of a command as well as carriage return or linefeed,
-             and can recognize color requests from the RGB picker in the PLAY Bluno app.
-            (That app sends a lot of extraneous data, I recommend using a simpler terminal, however)
+## Software notes 
+A BLE Terminal app can be used to send mode and color change requests to the program
+I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
+Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
+This program recognizes a semicolon (;) as the end of a command as well as carriage return or linefeed,
+and can recognize color requests from the RGB picker in the PLAY Bluno app.
+(That app sends a lot of extraneous data, I recommend using a simpler terminal, however)
