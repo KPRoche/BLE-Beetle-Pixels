@@ -28,7 +28,7 @@ There are 3 different programs in this repository:
    It also offers the option of steady on, or a fade-up and down pulse effect.
    Finally, a Sleep option turns off all the LEDS, but leaves the processor up and looking for new commands.
    
-* **BLEetleBelt_v6** controls a long strip (120 pixels default) designed to be mounted in a belt. (Why _ _v6 _? It took six versions before I was happy with it)
+* **BLEetleBelt_v6** controls a long strip (120 pixels default) designed to be mounted in a belt. (Why *v6*? It took six versions before I was happy with it)
 
   It offers the same color options as **BLE_Simple_NEO** but has a widely different assortment of lighting effects:
   Single color effects: (which may be rotated through the color wheel via the rainbow option)
@@ -37,6 +37,8 @@ There are 3 different programs in this repository:
   + meteor or raindrop effect   <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-in.gif" align=right width='100px'><img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-out.gif" align=right v_align=bottom width='100px'>
   + split meteor effect either towards or away from center of the strip 
   + double meteor effect (criss-crossing the length of the strip)<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/double-meteor.gif" align=right v_align=bottom width='100px'>
+  
+  
   
   + theater chase effect, either single color or with a progressive rainbow fade along the length
   + progressive rainbow fade of the entire length
@@ -57,7 +59,16 @@ All of these programs uses the Adafruit_NeoPixel library, as well as the EEPROM 
   Animations are based on those in the Adafruit_NeoPixel library examples
   
 ## Construction Notes  
-           NeoPixel data connection should be connected to pin D5 on the BLE Beetle
+
+The program presumes the NeoPixel data connection will be connected to pin D5 on the BLE Beetle. I like to use the 3-pin JST connectors
+for NeoPixels, so the controller can be disconnected from the lighting harness for reprogrammng.
+While rated for 5V (easily provided by a USB power bank), the BLE Beetle can also happily run on the 3.7 VDC provided by a LiPo
+(lithium-polymer) battery. Most NeoPixels will also happily run at this voltage, which makes powering small wearables like the collar
+version of this project easier.
+The plus and minus terminals are easy to find as their holes are in the shape of a **+** and a **-**. Here are photos showing examples
+of wiring for USB and LiPo use.
+
+
   
            A BLE Terminal app can be used to send mode and color change requests to the program
            I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
