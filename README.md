@@ -5,8 +5,10 @@ Code for several Neopixel (WS2812B addressable LED) projects, run by  a DFRobot 
 
 ## Overview
 
-The DFRobot BLE Beetle controller is an Arduino-compatible variant which includes a BLE (Bluetooth Low Energy) transceiver based on the 
-TI CC2540 chip. 
+<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/BLEBeetle.jpg" align=right> The DFRobot BLE Beetle controller is an Arduino-compatible variant which includes a BLE (Bluetooth Low Energy) transceiver based on the 
+TI CC2540 chip.  The Beetle is quite compact, 28.8mm X 33.1mm (1.13" x 1.30") and has the bonus of two sets of power terminals 
+(V+ and GND) which are connected to the V+ and 0V pins in its micro-USB connector, so LEDs can be easily connected to power, 
+bypassing the voltage regulator for the controller chip. (Getting to those voltages can be fussy on other small Arduino variants).
 It is part of their *Bluno* family of controllers. There are several mobile apps available for both iOS and Android devices, which means 
 it fairly simple to build a wearable NeoPixel project remote controlled by your mobile device.
 
@@ -32,9 +34,9 @@ There are 3 different programs in this repository:
   Single color effects: (which may be rotated through the color wheel via the rainbow option)
   + pulse (fade-up/fade-down)
   + "Larson scanner" (like a Cylon eye) with multiple "eyes"
-  + meteor or raindrop effect   
-  + split meteor effect either towards or away from center of the strip
-  + double meteor effect (criss-crossing the length of the strip)
+  + meteor or raindrop effect   <img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-in.gif" align=right width='100px'><img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/split-out.gif" align=right v_align=bottom width='100px'>
+  + split meteor effect either towards or away from center of the strip 
+  + double meteor effect (criss-crossing the length of the strip)<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/double-meteor.gif" align=right v_align=bottom width='100px'>
   
   + theater chase effect, either single color or with a progressive rainbow fade along the length
   + progressive rainbow fade of the entire length
