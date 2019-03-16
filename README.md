@@ -77,7 +77,21 @@ After testing, I recommend covering the board with large heat-shrink tubing or (
 <hr>
 
 ## Software notes 
-A BLE Terminal app can be used to send mode and color change requests to the program
+### Arduino code
+The BLE Beetle is set up by default to run its BLE interface in parallel with its main serial interface, so the command parser in the code just 
+monitors the serial port. There are two functions that handle this. 
+**bleRead** checks for available data at the serial port and reads bytes until it reaches a terminating character (semicolon, carriage return or line feed)
+(Semicolons are used by the Bluno Play app to terminate its transmissions).
+A programmable communications delay is used to make sure that characters are not lost due to timeouts.
+It then returns all those bytes as a String value. (Note -- that is the Arduino **String** type, not the lower-case *string* which is just a character array.
+The String variable type includes a whole bunch of built in functions.  
+**processBLEcmd** parses such a string, searching for valid commands to execute. 
+C++ cannot do a select function on a String, so the options
+are built as a set of cascaded, nested **if** and **else if** statements, which makes it easily extensible.
+It uses the String.indexOf() and String.substring methods extensively to search for keywords and values.
+
+### BLE Terminal App
+A number of different BLE Terminal apps can be used to send mode and color change requests to the program
 I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
 Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
 This program recognizes a semicolon (;) as the end of a command as well as carriage return or linefeed,
