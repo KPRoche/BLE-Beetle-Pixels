@@ -58,42 +58,19 @@ collar can be worn together and put in complementary modes.
 All of these programs uses the Adafruit_NeoPixel library, as well as the EEPROM library (to store the last running state)
   Animations are based on those in the Adafruit_NeoPixel library examples
   
-## Construction Notes  
+# Installation
+## Hardware
++ This software is designed to run on the BLE Beetle controller, controlling a series of WS2812 family addressable LEDs (e.g., NeoPixels from Adafruit.com). The controller should be wired as illustrated in the wiki to control the pixels via pin D5
+## Software
++ Download the software from the repository, and open the program you wish to use in the Arduino IDE. 
++ You will need to have the Adafruit_Neopixel library installed, as well as the EEPROM library.
++ Set the IDE for an Arduino Uno board, and select the serial port that corresponds to your Beetle when it is connected to the USB on your workstation.
++ Compile and upload the software to your board.
++ If you haven't already, connect the board to your pixels and then to power. If it is working, the default light and color mode will fire up.
+## Use
++ Select and install an appropriate BLE terminal app on your mobile device
++ open the app, and look for your Beetle listed in available devices (**BLUNO** unless you have renamed it as described in the wiki)
++ connect to the Beetle, and try the different commands for colors and modes. Experiment to find what you like best (and, if available, program the shortcut buttons in your app to make it easy to get to them)
 
-The program presumes the NeoPixel data connection will be connected to pin D5 on the BLE Beetle. I like to use the 3-pin JST connectors
-for NeoPixels, so the controller can be disconnected from the lighting harness for reprogrammng.
-While rated for 5V (easily provided by a USB power bank), the BLE Beetle can also happily run on the 3.7 VDC provided by a LiPo
-(lithium-polymer) battery. Most NeoPixels will also happily run at this voltage, which makes powering small wearables like the collar
-version of this project easier.
-The plus and minus terminals are easy to find as their holes are in the shape of a **+** and a **-**. Here are some photos 
-showing examples of wiring for USB and LiPo use.
+## Don your Beetle-powered wear and go light up the night!
 
-<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3531.jpg" width='250px' align='left' alt-text='two BLE beetles showing output wiring for NeoPixels. One (short wires) includes a connector for LiPo power connection' >
-<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3535.jpg" width='250px' align alt-text='close-up of two BLE beetles showing output wiring for NeoPixels. One (short wires) includes a connector for LiPo power connection' >
-<br>
-<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3532.jpg" width='250px' align = 'left' alt-text='close-up of BLE Beetle wired for NeoPixels and LiPo power connection'>
-<img src="https://github.com/KPRoche/BLE-Beetle-Belt/blob/master/images/IMG_3534.jpg" width='250px' alt-text='close-up of BLE Beetle wired for NeoPixels, no extra power connection'>
-After testing, I recommend covering the board with large heat-shrink tubing or (less-optimal) electrical tape.
-<hr>
-
-## Software notes 
-### Arduino code
-The BLE Beetle is set up by default to run its BLE interface in parallel with its main serial interface, so the command parser in the code just 
-monitors the serial port. There are two functions that handle this. 
-**bleRead** checks for available data at the serial port and reads bytes until it reaches a terminating character (semicolon, carriage return or line feed)
-(Semicolons are used by the Bluno Play app to terminate its transmissions).
-A programmable communications delay is used to make sure that characters are not lost due to timeouts.
-It then returns all those bytes as a String value. (Note -- that is the Arduino **String** type, not the lower-case *string* which is just a character array.
-The String variable type includes a whole bunch of built in functions.  
-**processBLEcmd** parses such a string, searching for valid commands to execute. 
-C++ cannot do a select function on a String, so the options
-are built as a set of cascaded, nested **if** and **else if** statements, which makes it easily extensible.
-It uses the String.indexOf() and String.substring methods extensively to search for keywords and values.
-
-### BLE Terminal App
-A number of different BLE Terminal apps can be used to send mode and color change requests to the program
-I had good luck with the BLE Terminal HM-10 iOs App, because I could assign commands to buttons.
-Once connected, the terminal must be put in DFB1 Mode (no echo) to work properly
-This program recognizes a semicolon (;) as the end of a command as well as carriage return or linefeed,
-and can recognize color requests from the RGB picker in the PLAY Bluno app.
-(That app sends a lot of extraneous data, I recommend using a simpler terminal, however)
