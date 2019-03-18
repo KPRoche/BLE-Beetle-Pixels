@@ -59,6 +59,8 @@ All of these programs uses the Adafruit_NeoPixel library, as well as the EEPROM 
   Animations are based on those in the Adafruit_NeoPixel library examples
   
 # Installation
+Please consult the <a href='https://github.com/KPRoche/BLE-Beetle-Belt/wiki'>wiki</a> for for more detailed information about installation.
+
 ## Hardware
 + This software is designed to run on the BLE Beetle controller, controlling a series of WS2812 family addressable LEDs (e.g., NeoPixels from Adafruit.com). The controller should be wired as illustrated in the wiki to control the pixels via pin D5
 ## Software
